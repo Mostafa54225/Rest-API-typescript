@@ -20,15 +20,15 @@ export async function updateSession(query: FilterQuery<ISession>, update: Update
     return await SessionModel.updateOne(query, update)
 }
 
-export async function reIssueAccessToken(refresh_token: string) {
+export async function reIssueAccessToken(refresh_token: string): Promise<string> {
     const {decoded} = verifyJWT(refresh_token)
     
-    if(!decoded || !get(decoded, 'session')) return false
+    if(!decoded || !get(decoded, 'session')) return Promise.reject('Invalid refresh token')
     const session = await SessionModel.findById(decoded.session)
-    if(!session || !session.valid) return false
+    if(!session || !session.valid) return Promise.reject('Invalid refresh token')
     
     const user = await findUser({_id: session.userId.toString()})
-    if(!user) return false
+    if(!user) return Promise.reject('Invalid refresh token')
 
     const {password, ...otherDetails} = user
     const access_token = signJWT(

@@ -17,15 +17,20 @@ export const deserializeUser = async (req: Request, res: Response, next: NextFun
     }
     console.log("expired: ", expired)
     if(expired && refresh_token) {
-        const newAccessToken = await reIssueAccessToken(refresh_token)
-        if(newAccessToken) {
-            
-            const { decoded } = verifyJWT(newAccessToken)
-            res.cookie('access_token', newAccessToken, {
-                httpOnly: true})
-            res.locals.user = decoded
+        try {
+            const newAccessToken = await reIssueAccessToken(refresh_token)
+            if(newAccessToken) {
+                
+                const { decoded } = verifyJWT(newAccessToken)
+                res.cookie('access_token', newAccessToken, {
+                    httpOnly: true})
+                res.locals.user = decoded
+                return next()
+            }
+        } catch (error) {
             return next()
         }
+
 
     }
 }
